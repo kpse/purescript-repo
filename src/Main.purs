@@ -4,12 +4,15 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
+import Data.Foreign
 import Data.Foreign.Class (class Decode, class Encode)
 import Data.Foreign.Generic (defaultOptions, genericDecode, genericEncode)
 import Data.Foreign.Generic (decodeJSON, encodeJSON)
 import Data.Generic.Rep as Rep
 import Data.Generic.Rep.Show (genericShow)
 import Global.Unsafe (unsafeStringify)
+import Control.Monad.Except
+import Data.Either
 
 
 newtype MyRecord = MyRecord {a :: Int}
@@ -25,4 +28,9 @@ instance encodeMyRecord :: Encode MyRecord where
 main :: forall e. Eff (console :: CONSOLE | e) Unit
 main = do
   log "Hello sailor!"
-  log $ show $ encodeJSON (MyRecord { a: 1})
+  log $ show json
+  case runExcept (decodeJSON json :: F MyRecord) of
+    Right obj -> log $ show obj
+    _ -> log "error decoding"
+  where
+    json = encodeJSON (MyRecord { a: 1})
